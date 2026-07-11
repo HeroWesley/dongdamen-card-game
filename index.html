@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>夜市小吃翻牌王</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top, rgba(255, 213, 128, 0.35), transparent 34%),
+        linear-gradient(135deg, #12091f, #3b123d 55%, #111827);
+      color: white;
+      padding: 18px 12px;
+    }
+
+    .game {
+      width: 100%;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      color: #ffd166;
+      text-shadow: 0 4px 24px rgba(255, 209, 102, 0.45);
+      letter-spacing: 1px;
+    }
+
+    .hero p {
+      margin: 0;
+      color: #fed7aa;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(14px);
+      padding: 16px;
+    }
+
+    .status {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .status-card {
+      background: rgba(0, 0, 0, 0.24);
+      border-radius: 16px;
+      padding: 12px 8px;
+      text-align: center;
+    }
+
+    .status-card .label {
+      color: #cbd5e1;
+      font-size: 13px;
+      margin-bottom: 5px;
+    }
+
+    .status-card .value {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    input,
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 15px 16px;
+      font-size: 17px;
+      outline: none;
+    }
+
+    input {
+      background: white;
+      color: #111827;
+    }
+
+    button {
+      background: linear-gradient(135deg, #f97316, #facc15);
+      color: #421407;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .hint-button {
+      background: rgba(255, 255, 255, 0.18);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      margin-bottom: 14px;
+    }
+
+    .message {
+      min-height: 58px;
+      background: rgba(0, 0, 0, 0.24);
+      border-radius: 16px;
+      padding: 13px 14px;
+      line-height: 1.5;
+      margin-bottom: 14px;
+      color: #fff;
+      font-size: 15px;
+    }
+
+    .message.success {
+      color: #bbf7d0;
+    }
+
+    .message.error {
+      color: #fecaca;
+    }
+
+    .message.win {
+      color: #fde68a;
+      font-weight: 900;
+      animation: glow 1s infinite alternate;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    .card {
+      min-height: 108px;
+      perspective: 1000px;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      min-height: 108px;
+      position: relative;
+      transition: transform 0.55s ease;
+      transform-style: preserve-3d;
+    }
+
+    .card.open .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px;
+      text-align: center;
+      font-weight: 900;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+    }
+
+    .card-front {
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)),
+        radial-gradient(circle at top, rgba(250, 204, 21, 0.25), transparent 45%);
+      color: #fef3c7;
+      font-size: 34px;
+    }
+
+    .card.hinted .card-front {
+      background: linear-gradient(135deg, #fef3c7, #fdba74);
+      color: #7c2d12;
+      font-size: 14px;
+      line-height: 1.45;
+      padding: 10px;
+      flex-direction: column;
+    }
+
+    .card.hinted .card-front::before {
+      content: "提示";
+      display: block;
+      font-size: 12px;
+      margin-bottom: 5px;
+      color: #9a3412;
+      letter-spacing: 2px;
+    }
+
+    .card-back {
+      transform: rotateY(180deg);
+      background: linear-gradient(135deg, #22c55e, #84cc16);
+      color: #052e16;
+      font-size: 18px;
+      line-height: 1.35;
+    }
+
+    .hint {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      opacity: 0.72;
+      font-weight: 700;
+    }
+
+    @keyframes glow {
+      from {
+        text-shadow: 0 0 8px rgba(250, 204, 21, 0.5);
+      }
+
+      to {
+        text-shadow: 0 0 24px rgba(250, 204, 21, 1);
+      }
+    }
+
+    @media (max-width: 380px) {
+      .hero h1 {
+        font-size: 26px;
+      }
+
+      .status-card .value {
+        font-size: 23px;
+      }
+
+      .card {
+        min-height: 96px;
+      }
+
+      .card-inner {
+        min-height: 96px;
+      }
+
+      .card-front {
+        font-size: 30px;
+      }
+
+      .card-back {
+        font-size: 16px;
+      }
+
+      .card.hinted .card-front {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="game">
+    <section class="hero">
+      <h1>東大門翻牌王</h1>
+      <p>輸入正確的店名，翻開九宮格字卡！</p>
+    </section>
+
+    <section class="panel">
+      <div class="status">
+        <div class="status-card">
+          <div class="label">目前分數</div>
+          <div class="value" id="score">10</div>
+        </div>
+
+        <div class="status-card">
+          <div class="label">已答對</div>
+          <div class="value" id="openedCount">0</div>
+        </div>
+
+        <div class="status-card">
+          <div class="label">剩餘字卡</div>
+          <div class="value" id="remainingCount">9</div>
+        </div>
+
+        <div class="status-card">
+          <div class="label">提示次數</div>
+          <div class="value" id="hintCount">0</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <input
+          id="answerInput"
+          type="text"
+          placeholder="輸入店名"
+          autocomplete="off"
+        />
+
+        <button onclick="submitAnswer()">送出答案</button>
+      </div>
+
+      <button class="hint-button" onclick="useHint()">開啟提示，扣 3 分</button>
+
+      <div id="message" class="message">
+        遊戲開始！起始分數 10 分。答對加 10 分，使用提示扣 3 分，答錯不扣分。
+      </div>
+
+      <div id="cards" class="cards"></div>
+    </section>
+  </main>
+
+  <script>
+    const questionBank = [
+      {
+        answer: "強蛋餅",
+        label: "強蛋餅",
+        hint: "咦?這不是早餐嗎?"
+      },
+      {
+        answer: "玉里臭豆腐東大門店",
+        label: "玉里臭豆腐東大門店",
+        hint: "歪國人退避三舍"
+      },
+      {
+        answer: "地寶拔絲地瓜芋頭",
+        label: "地寶拔絲地瓜芋頭",
+        hint: "歐歐夜市必吃"
+      },
+      {
+        answer: "夜市王福町本舖檸檬汁",
+        label: "夜市王福町本舖檸檬汁",
+        hint: "秘密配方是加了煉乳"
+      },
+      {
+        answer: "法式棺材板",
+        label: "法式棺材板",
+        hint: "Bonjuor趕屍人"
+      },
+      {
+        answer: "公正街香酥雞",
+        label: "公正街香酥雞",
+        hint: "肥宅消夜必備"
+      },
+      {
+        answer: "肚肚扁巴西餡餅",
+        label: "肚肚扁巴西餡餅",
+        hint: "朗拿度又抽筋啦!"
+      },
+      {
+        answer: "東大門超級大熱狗",
+        label: "東大門超級大熱狗",
+        hint: "Super"
+      },
+      {
+        answer: "正當冰花蓮東大門夜市店",
+        label: "正當冰花蓮東大門店",
+        hint: "撿到錢送警察局"
+      },
+      {
+        answer: "林記燒番麥",
+        label: "林記燒番麥",
+        hint: "轉吧轉吧黃色霓虹燈"
+      },
+      {
+        answer: "東大門夜市彩虹臭薯條",
+        label: "東大門夜市彩虹臭薯條",
+        hint: "歪國人想找安全牌卻中標"
+      },
+      {
+        answer: "吉香炸彈蔥油餅",
+        label: "吉香炸彈蔥油餅",
+        hint: "不是黃車也不是藍車"
+      }
+    ];
+
+    let gameCards = [];
+    let score = 10;
+    let hintCount = 0;
+
+    function shuffle(array) {
+      return [...array].sort(() => Math.random() - 0.5);
+    }
+
+    function normalizeText(text) {
+      return text.trim().replace(/\s+/g, "").toLowerCase();
+    }
+
+    function initGame() {
+      gameCards = shuffle(questionBank)
+        .slice(0, 9)
+        .map(item => ({
+          ...item,
+          opened: false,
+          hinted: false
+        }));
+
+      score = 10;
+      hintCount = 0;
+
+      document.getElementById("message").className = "message";
+      document.getElementById("message").textContent =
+        "遊戲開始！起始分數 10 分。答對加 10 分，使用提示扣 3 分，答錯不扣分。";
+
+      renderCards();
+      updateStatus();
+    }
+
+    function renderCards() {
+      const cardsContainer = document.getElementById("cards");
+      cardsContainer.innerHTML = "";
+
+      gameCards.forEach(card => {
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "card";
+
+        if (card.opened) {
+          cardDiv.classList.add("open");
+        }
+
+        if (card.hinted && !card.opened) {
+          cardDiv.classList.add("hinted");
+        }
+
+        const frontContent = card.hinted && !card.opened
+          ? card.hint
+          : "?";
+
+        cardDiv.innerHTML = `
+          <div class="card-inner">
+            <div class="card-face card-front">
+              ${frontContent}
+            </div>
+
+            <div class="card-face card-back">
+              <div>
+                ${card.label}
+                <span class="hint">${card.hint || ""}</span>
+              </div>
+            </div>
+          </div>
+        `;
+
+        cardsContainer.appendChild(cardDiv);
+      });
+    }
+
+    function submitAnswer() {
+      const input = document.getElementById("answerInput");
+      const message = document.getElementById("message");
+      const answer = normalizeText(input.value);
+
+      message.className = "message";
+
+      if (!answer) {
+        message.textContent = "請先輸入一個答案。";
+        message.classList.add("error");
+        return;
+      }
+
+      const matchedCard = gameCards.find(card =>
+        normalizeText(card.answer) === answer
+      );
+
+      if (!matchedCard) {
+        message.textContent = `「${input.value}」不是本局答案，答錯不扣分。`;
+        message.classList.add("error");
+      } else if (matchedCard.opened) {
+        message.textContent = `「${matchedCard.label}」已經答對過了，不能重複得分。`;
+        message.classList.add("error");
+      } else {
+        matchedCard.opened = true;
+        matchedCard.hinted = false;
+
+        score += 10;
+
+        const openedCount = gameCards.filter(card => card.opened).length;
+
+        if (openedCount === gameCards.length) {
+          message.textContent =
+            `恭喜破關！你翻開了全部九張字卡，最後分數是 ${score} 分！`;
+          message.classList.add("win");
+        } else {
+          message.textContent =
+            `答對了！「${matchedCard.label}」字卡已翻開，加 10 分！`;
+          message.classList.add("success");
+        }
+      }
+
+      input.value = "";
+      renderCards();
+      updateStatus();
+    }
+
+    function useHint() {
+      const message = document.getElementById("message");
+      message.className = "message";
+
+      const availableHintCards = gameCards.filter(card =>
+        !card.opened && !card.hinted
+      );
+
+      if (availableHintCards.length === 0) {
+        message.textContent =
+          "目前沒有可以再開啟提示的字卡了。請根據已顯示的提示作答！";
+        message.classList.add("error");
+        return;
+      }
+
+      const randomCard = availableHintCards[
+        Math.floor(Math.random() * availableHintCards.length)
+      ];
+
+      randomCard.hinted = true;
+      hintCount++;
+
+      score = Math.max(0, score - 3);
+
+      message.textContent =
+        "已開啟一格提示。使用提示扣 3 分。";
+
+      message.classList.add("success");
+
+      renderCards();
+      updateStatus();
+    }
+
+    function updateStatus() {
+      const openedCount = gameCards.filter(card => card.opened).length;
+      const remainingCount = gameCards.length - openedCount;
+
+      document.getElementById("score").textContent = score;
+      document.getElementById("openedCount").textContent = openedCount;
+      document.getElementById("remainingCount").textContent = remainingCount;
+      document.getElementById("hintCount").textContent = hintCount;
+    }
+
+    document.getElementById("answerInput").addEventListener("keydown", event => {
+      if (event.key === "Enter") {
+        submitAnswer();
+      }
+    });
+
+    initGame();
+  </script>
+</body>
+</html>
